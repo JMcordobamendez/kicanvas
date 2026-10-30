@@ -291,10 +291,7 @@ export function pin_geometry(
         } else if (symbol.mirror == "y") {
             tx = -tx;
         }
-        return new Vec2(
-            symbol.at.position.x + tx,
-            symbol.at.position.y - ty,
-        );
+        return new Vec2(symbol.at.position.x + tx, symbol.at.position.y - ty);
     });
     return { a: ends[0]!, b: ends[1]! };
 }
@@ -352,7 +349,10 @@ export function parse_netlist(text: string): ExternalNet[] {
             }
             if (e[0] === "net") {
                 const name = field(e, "name");
-                const net: ExternalNet = { name: String(name ?? ""), nodes: [] };
+                const net: ExternalNet = {
+                    name: String(name ?? ""),
+                    nodes: [],
+                };
                 for (const n of e) {
                     if (Array.isArray(n) && n[0] === "node") {
                         net.nodes.push({
@@ -580,7 +580,9 @@ export class SchematicNetlist {
             const parts = path.split("/").filter(Boolean);
             let out = "/";
             for (let k = 2; k <= parts.length; k++) {
-                const parent = by_path.get("/" + parts.slice(0, k - 1).join("/"));
+                const parent = by_path.get(
+                    "/" + parts.slice(0, k - 1).join("/"),
+                );
                 const uuid = parts[k - 1]!;
                 const sheet = parent?.doc.sheets.find((s) => s.uuid == uuid);
                 out += `${sheet?.sheetname ?? sheet?.sheetfile ?? uuid}/`;
@@ -634,7 +636,11 @@ export class SchematicNetlist {
         const local_names = new Map<string, number[]>();
         const hier_names = new Map<string, number[]>();
         const global_names = new Map<string, number[]>();
-        const join = (map: Map<string, number[]>, key: string, node: number) => {
+        const join = (
+            map: Map<string, number[]>,
+            key: string,
+            node: number,
+        ) => {
             const list = map.get(key);
             if (list) {
                 list.push(node);

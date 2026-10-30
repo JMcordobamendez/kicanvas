@@ -103,8 +103,13 @@ function symbol(
         ${pins.map((n) => `(pin "${n}" (uuid ${uuid()}))`).join(" ")})`;
 }
 
-const resistor = (ref: string, x: number, y: number, rotation = 0, extra = "") =>
-    symbol("Device:R", ref, "10k", x, y, rotation, extra);
+const resistor = (
+    ref: string,
+    x: number,
+    y: number,
+    rotation = 0,
+    extra = "",
+) => symbol("Device:R", ref, "10k", x, y, rotation, extra);
 
 const gnd = (x: number, y: number) =>
     symbol("power:GND", "#PWR01", "GND", x, y, 0, "", ["1"]);
@@ -250,7 +255,9 @@ suite("kicad.schematic-nets: schematic connectivity", function () {
         const net = netlist.net_for_pin("R1", "2")!;
         assert.equal(net.name, "GND");
         // the power symbol belongs to the net, so it can be picked
-        const power = [...doc.symbols.values()].find((s) => s.reference == "#PWR01")!;
+        const power = [...doc.symbols.values()].find(
+            (s) => s.reference == "#PWR01",
+        )!;
         assert.strictEqual(netlist.net_of(`/${ROOT}`, power), net);
         // and it is not counted as a pin of the net
         assert.equal(net.pins.length, 1);
@@ -276,12 +283,18 @@ suite("kicad.schematic-nets: schematic connectivity", function () {
             resistor("R4", 400, 100, 270),
         );
         const segment = (ref: string, n: string) => {
-            const s = [...doc.symbols.values()].find((x) => x.reference == ref)!;
+            const s = [...doc.symbols.values()].find(
+                (x) => x.reference == ref,
+            )!;
             const pin = s.pins.find((p) => p.number == n)!;
             return netlist.pin_segment(`/${ROOT}`, pin)!;
         };
         const near = (v: Vec2, x: number, y: number) =>
-            assert.isBelow(Math.hypot(v.x - x, v.y - y), 1e-6, `${v.x},${v.y} vs ${x},${y}`);
+            assert.isBelow(
+                Math.hypot(v.x - x, v.y - y),
+                1e-6,
+                `${v.x},${v.y} vs ${x},${y}`,
+            );
 
         near(segment("R1", "1").a, 96.19, 100);
         near(segment("R1", "2").a, 103.81, 100);
@@ -320,7 +333,10 @@ suite("kicad.schematic-nets: schematic connectivity", function () {
         assert.isDefined(a);
         assert.strictEqual(a, b);
         assert.equal(a.name, "/Sub/IN");
-        assert.deepEqual(a.sheet_paths.sort(), sheets.map((s) => s.path).sort());
+        assert.deepEqual(
+            a.sheet_paths.sort(),
+            sheets.map((s) => s.path).sort(),
+        );
         assert.isAbove(a.items_on(`/${ROOT}/${SUB}`).length, 0);
     });
 
@@ -328,7 +344,14 @@ suite("kicad.schematic-nets: schematic connectivity", function () {
         const root = schematic(
             ROOT,
             sheet_block("A", "sub.kicad_sch", SUB, 50, 50, []),
-            sheet_block("B", "sub.kicad_sch", "44444444-4444-4444-8444-444444444444", 100, 50, []),
+            sheet_block(
+                "B",
+                "sub.kicad_sch",
+                "44444444-4444-4444-8444-444444444444",
+                100,
+                50,
+                [],
+            ),
         );
         const sub = schematic(
             "33333333-3333-4333-8333-333333333333",
@@ -344,12 +367,18 @@ suite("kicad.schematic-nets: schematic connectivity", function () {
         assert.deepEqual(names, ["/A/X", "/B/X"]);
         assert.deepEqual(
             netlist.paths_of(sub).sort(),
-            [`/${ROOT}/${SUB}`, `/${ROOT}/44444444-4444-4444-8444-444444444444`].sort(),
+            [
+                `/${ROOT}/${SUB}`,
+                `/${ROOT}/44444444-4444-4444-8444-444444444444`,
+            ].sort(),
         );
         const wire_item = sub.wires[0]!;
         assert.notStrictEqual(
             netlist.net_of(`/${ROOT}/${SUB}`, wire_item),
-            netlist.net_of(`/${ROOT}/44444444-4444-4444-8444-444444444444`, wire_item),
+            netlist.net_of(
+                `/${ROOT}/44444444-4444-4444-8444-444444444444`,
+                wire_item,
+            ),
         );
     });
 
@@ -374,7 +403,10 @@ suite("kicad.schematic-nets: schematic connectivity", function () {
         assert.strictEqual(wire_hit.net, pin.net);
 
         // the junction wins over the wires that meet there
-        assert.equal(netlist.pick(path, new Vec2(100, 120), 0.5)!.kind, "junction");
+        assert.equal(
+            netlist.pick(path, new Vec2(100, 120), 0.5)!.kind,
+            "junction",
+        );
 
         // nothing there
         assert.isNull(netlist.pick(path, new Vec2(50, 50), 0.5));
@@ -419,7 +451,10 @@ suite("kicad.schematic-nets: schematic connectivity", function () {
         const renamed = netlist.apply_names(external);
         assert.equal(renamed, 1);
         assert.equal(netlist.net_for_pin("R1", "2")!.name, "/VOUT");
-        assert.strictEqual(netlist.net_by_name("/VOUT"), netlist.net_for_pin("R2", "1"));
+        assert.strictEqual(
+            netlist.net_by_name("/VOUT"),
+            netlist.net_for_pin("R2", "1"),
+        );
         assert.equal(netlist.net_for_pin("R1", "2")!.name_source, "netlist");
     });
 });

@@ -59,7 +59,9 @@ export function paint_net(
         } else if (item instanceof schematic_items.PinInstance) {
             const segment = netlist.pin_segment(sheet_path, item);
             if (segment) {
-                gfx.line(new Polyline([segment.a, segment.b], wire_width, color));
+                gfx.line(
+                    new Polyline([segment.a, segment.b], wire_width, color),
+                );
                 gfx.circle(new Circle(segment.a, 0.6, color));
                 count++;
             }
