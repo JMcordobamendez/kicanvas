@@ -103,7 +103,7 @@ suite("viewers.schematic.SchematicViewer: nets", function () {
     });
 
     test("a click on a symbol body still selects the symbol, without a net", function () {
-        click(new Vec2(100, 98.5));
+        click(new Vec2(100, 100));
 
         const ctx = viewer.selected?.context;
         assert.instanceOf(ctx, SchematicSymbol);

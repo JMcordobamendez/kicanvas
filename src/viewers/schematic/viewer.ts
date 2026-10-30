@@ -48,7 +48,7 @@ export type NetPickable =
     | PinInstance;
 
 // How close to an item a click has to land, in screen pixels.
-const PICK_RADIUS_PX = 5;
+const PICK_RADIUS_PX = 4;
 
 export class SchematicViewer extends DocumentViewer<
     KicadSch,
