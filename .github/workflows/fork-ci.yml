@@ -8,6 +8,9 @@ on:
       - "feat/**"
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -27,6 +30,17 @@ jobs:
         run: npm run build
       - name: Unit tests
         run: npm run test
+      - name: Format with prettier (the fix is committed to the branch)
+        if: github.event_name == 'push'
+        run: |
+          npm run format
+          if ! git diff --quiet; then
+            git config user.name "José Miguel Córdoba Méndez"
+            git config user.email "79694677+JMcordobamendez@users.noreply.github.com"
+            git commit -am "style: format with prettier"
+            git push
+            echo "::warning::Formatting was committed: pull it, then push again to check the result"
+          fi
       - name: Lint (prettier)
         run: npm run lint:prettier
       - name: Checksum
