@@ -1,0 +1,9 @@
+{
+    // Used by the test runner (scripts/web-test-runner.config.mjs): the same
+    // settings as the build, except that class fields are defined with
+    // [[Define]] semantics, which is what the tests were written against.
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "useDefineForClassFields": true,
+    },
+}

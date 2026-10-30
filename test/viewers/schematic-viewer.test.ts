@@ -39,7 +39,9 @@ suite("viewers.schematic.SchematicViewer: nets", function () {
         await viewer.loaded;
     });
 
-    teardown(function () {
+    teardown(async function () {
+        // let the frame the viewer has queued draw before it is disposed
+        await new Promise((resolve) => setTimeout(resolve, 100));
         viewer.dispose();
         canvas.remove();
     });
@@ -57,6 +59,10 @@ suite("viewers.schematic.SchematicViewer: nets", function () {
         viewer.layers.by_name(LayerNames.net_highlight)!;
 
     test("a click on a wire selects it and highlights its net", function () {
+        const lb = viewer.layers
+            .by_name(LayerNames.label)!
+            .bboxes.get(doc.net_labels[0]!)!;
+        console.log("label bbox", lb.x, lb.y, lb.w, lb.h);
         click(new Vec2(100, 106));
 
         assert.strictEqual(viewer.selected?.context, doc.wires[0]);
