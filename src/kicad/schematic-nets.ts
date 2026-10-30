@@ -876,8 +876,10 @@ export class SchematicNetlist {
                                 o.kind == "label" ||
                                 (o.kind == "sheet_pin" &&
                                     is_bus_name(
-                                        (infos[o.node]!.item as SchematicSheetPin)
-                                            .name,
+                                        (
+                                            infos[o.node]!
+                                                .item as SchematicSheetPin
+                                        ).name,
                                     )),
                         )
                         .map((o) => o.node);
