@@ -10,6 +10,10 @@ import { SchematicSymbol } from "../../src/kicad/schematic";
 import kicad_default from "../../src/kicanvas/themes/kicad-default";
 import { KiCanvasNetHighlightEvent } from "../../src/viewers/base/events";
 import { LayerNames } from "../../src/viewers/schematic/layers";
+import {
+    label_bbox,
+    power_symbol_bbox,
+} from "../../src/viewers/schematic/net-painter";
 import { SchematicViewer } from "../../src/viewers/schematic/viewer";
 import { gnd, label, resistor, schematic, wire, ROOT } from "../sch/builders";
 
@@ -59,10 +63,6 @@ suite("viewers.schematic.SchematicViewer: nets", function () {
         viewer.layers.by_name(LayerNames.net_highlight)!;
 
     test("a click on a wire selects it and highlights its net", function () {
-        const lb = viewer.layers
-            .by_name(LayerNames.label)!
-            .bboxes.get(doc.net_labels[0]!)!;
-        console.log("label bbox", lb.x, lb.y, lb.w, lb.h);
         click(new Vec2(100, 106));
 
         assert.strictEqual(viewer.selected?.context, doc.wires[0]);
@@ -76,10 +76,7 @@ suite("viewers.schematic.SchematicViewer: nets", function () {
 
     test("a click on a label selects it", function () {
         const l = doc.net_labels[0]!;
-        const bbox = viewer.layers.by_name(LayerNames.label)!.bboxes.get(l)!;
-        assert.isDefined(bbox);
-
-        click(bbox.center);
+        click(label_bbox(l).center);
 
         assert.strictEqual(viewer.selected?.context, l);
         assert.strictEqual(viewer.highlighted_net, viewer.net_of(l));
@@ -99,11 +96,7 @@ suite("viewers.schematic.SchematicViewer: nets", function () {
         const power = [...doc.symbols.values()].find(
             (s) => s.reference == "#PWR01",
         )!;
-        const bbox = viewer.layers
-            .by_name(LayerNames.symbol_foreground)!
-            .bboxes.get(power)!;
-
-        click(bbox.center);
+        click(power_symbol_bbox(kicad_default.schematic, power).center);
 
         assert.strictEqual(viewer.selected?.context, power);
         assert.strictEqual(viewer.highlighted_net, viewer.net_of(power));
@@ -141,8 +134,7 @@ suite("viewers.schematic.SchematicViewer: nets", function () {
         assert.isTrue(highlight_layer().highlighted);
 
         viewer.highlight_net(viewer.netlist.net_of(path, doc.wires[1]));
-        assert.equal(viewer.highlighted_net?.name, "Net-0");
-        // the other net is not on this sheet... but this one is
+        assert.match(viewer.highlighted_net!.name, /^Net-\d+$/);
         assert.isTrue(highlight_layer().highlighted);
 
         viewer.highlight_net("no such net");

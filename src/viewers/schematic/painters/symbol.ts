@@ -228,7 +228,7 @@ function get_symbol_transform(
  * Determines the bounding box for the given symbol, including only the body
  * and the pins, not any fields or text items.
  */
-function get_symbol_body_and_pins_bbox(
+export function get_symbol_body_and_pins_bbox(
     theme: SchematicTheme,
     si: schematic_items.SchematicSymbol,
 ): BBox {

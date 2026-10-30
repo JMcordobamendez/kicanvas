@@ -33,7 +33,7 @@ import { DocumentViewer } from "../base/document-viewer";
 import { KiCanvasNetHighlightEvent } from "../base/events";
 import type { ViewLayerSet } from "../base/view-layers";
 import { LayerNames, LayerSet } from "./layers";
-import { paint_net } from "./net-painter";
+import { label_bbox, paint_net, power_symbol_bbox } from "./net-painter";
 import { SchematicPainter } from "./painter";
 
 /** Items that belong to a net and can be picked on the sheet. */
@@ -159,20 +159,25 @@ export class SchematicViewer extends DocumentViewer<
         const netlist = this.netlist;
 
         // Labels and power symbols are as big as they are drawn.
-        const label_layer = this.layers.by_name(LayerNames.label);
-        for (const [item, bbox] of label_layer?.bboxes ?? []) {
+        const labels = [
+            ...this.document.net_labels,
+            ...this.document.global_labels,
+            ...this.document.hierarchical_labels,
+        ];
+        for (const item of labels) {
             const net = netlist.net_of(path, item);
-            if (net && bbox.copy().grow(0.3).contains_point(mouse)) {
+            if (net && label_bbox(item).contains_point(mouse)) {
                 return { item, net };
             }
         }
-        const symbol_layer = this.layers.by_name(LayerNames.symbol_foreground);
-        for (const [item, bbox] of symbol_layer?.bboxes ?? []) {
+        for (const item of this.document.symbols.values()) {
             const net = netlist.net_of(path, item);
             if (
                 net &&
-                item instanceof SchematicSymbol &&
-                bbox.copy().grow(0.3).contains_point(mouse)
+                power_symbol_bbox(this.theme, item)
+                    .copy()
+                    .grow(0.3)
+                    .contains_point(mouse)
             ) {
                 return { item, net };
             }
@@ -218,7 +223,6 @@ export class SchematicViewer extends DocumentViewer<
         this.renderer.start_layer(layer.name);
         const count = paint_net(
             this.renderer,
-            this.layers,
             this.theme,
             this.netlist,
             net,
@@ -251,8 +255,10 @@ export class SchematicViewer extends DocumentViewer<
     // Power symbols are not on the interactive layer, they are found by how
     // they are drawn.
     #drawn_bbox(item: SchematicSymbol | SchematicSheet): BBox | null {
-        const layer = this.layers.by_name(LayerNames.symbol_foreground);
-        return layer?.bboxes.get(item)?.copy() ?? null;
+        if (item instanceof SchematicSymbol && this.net_of(item)) {
+            return power_symbol_bbox(this.theme, item).copy();
+        }
+        return null;
     }
 
     /** Draws the highlighted net again, after the sheet shown changed. */
@@ -284,9 +290,7 @@ export class SchematicViewer extends DocumentViewer<
             item instanceof GlobalLabel ||
             item instanceof HierarchicalLabel
         ) {
-            const label_layer = this.layers.by_name(LayerNames.label);
-            const bbox = label_layer?.bboxes.get(item);
-            return bbox ? bbox.copy() : null;
+            return label_bbox(item);
         }
         return null;
     }
