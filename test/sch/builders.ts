@@ -127,13 +127,18 @@ export function sheet_block(
             .join(" ")})`;
 }
 
+export function schematic_source(root_uuid: string, ...items: string[]) {
+    return `(kicad_sch (version 20211123) (generator "eeschema") (uuid ${root_uuid})
+            (paper "A4")
+            ${lib_symbols()}
+            ${items.join("
+")})`;
+}
+
 export function schematic(root_uuid: string, ...items: string[]) {
     return new KicadSch(
         "test.kicad_sch",
-        `(kicad_sch (version 20211123) (generator "eeschema") (uuid ${root_uuid})
-            (paper "A4")
-            ${lib_symbols()}
-            ${items.join("\n")})`,
+        schematic_source(root_uuid, ...items),
     );
 }
 
