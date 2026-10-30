@@ -4,6 +4,7 @@
     Full text available at: https://opensource.org/licenses/MIT
 */
 
+import { Color } from "../../base/color";
 import { BBox } from "../../base/math";
 import { Circle, Polygon, Polyline, Renderer } from "../../graphics";
 import type { SchematicTheme } from "../../kicad";
@@ -70,7 +71,7 @@ export function power_symbol_bbox(
 
 /**
  * Draws a net on top of a schematic sheet: its wires, buses, junctions and
- * pins thicker and in the theme's "brightened" color, a box around its labels
+ * pins thicker, in a vivid yellow with a soft halo, a box around its labels
  * and power symbols. The layer it is drawn on is highlighted by the caller,
  * which makes the viewer dim everything else.
  *
@@ -83,41 +84,52 @@ export function paint_net(
     net: SchematicNet,
     sheet_path: string,
 ): number {
-    const color = theme.brightened;
+    // A vivid yellow, stronger than the theme's pale "brightened": the net has
+    // to stand out on a whole-sheet view, where the rest is dimmed.
+    const color = Color.from_css("#ffd21f");
     const fill = color.with_alpha(0.25);
-    const wire_width = 0.4;
+    const halo = color.with_alpha(0.3);
+    const wire_width = 0.8;
+    const halo_width = 2.8;
     let count = 0;
 
     const box = (bbox: BBox) => {
         const bb = bbox.copy().grow(0.5);
         gfx.polygon(Polygon.from_BBox(bb, fill));
-        gfx.line(Polyline.from_BBox(bb, 0.2, color));
+        gfx.line(Polyline.from_BBox(bb, 0.4, color));
         count++;
     };
 
     for (const item of net.items_on(sheet_path)) {
         if (item instanceof schematic_items.Wire) {
+            gfx.line(new Polyline(item.pts, halo_width, halo));
             gfx.line(new Polyline(item.pts, wire_width, color));
             count++;
         } else if (item instanceof schematic_items.Bus) {
+            gfx.line(new Polyline(item.pts, halo_width * 1.5, halo));
             gfx.line(new Polyline(item.pts, wire_width * 2, color));
             count++;
         } else if (item instanceof schematic_items.Junction) {
-            const radius = Math.max((item.diameter || 0) / 2, 0.5);
+            const radius = Math.max((item.diameter || 0) / 2, 0.5) + 0.6;
+            gfx.circle(new Circle(item.at.position, radius + 0.8, halo));
             gfx.circle(new Circle(item.at.position, radius, color));
             count++;
         } else if (item instanceof schematic_items.PinInstance) {
             const segment = netlist.pin_segment(sheet_path, item);
             if (segment) {
                 gfx.line(
+                    new Polyline([segment.a, segment.b], halo_width, halo),
+                );
+                gfx.line(
                     new Polyline([segment.a, segment.b], wire_width, color),
                 );
-                gfx.circle(new Circle(segment.a, 0.6, color));
+                gfx.circle(new Circle(segment.a, 1.4, halo));
+                gfx.circle(new Circle(segment.a, 0.9, color));
                 count++;
             }
         } else if (item instanceof schematic_items.SchematicSheetPin) {
-            gfx.circle(new Circle(item.at.position, 0.9, fill));
-            gfx.circle(new Circle(item.at.position, 0.4, color));
+            gfx.circle(new Circle(item.at.position, 1.4, halo));
+            gfx.circle(new Circle(item.at.position, 0.8, color));
             count++;
         } else if (item instanceof schematic_items.SchematicSymbol) {
             box(power_symbol_bbox(theme, item));
