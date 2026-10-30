@@ -26,6 +26,7 @@
         "typescript-lit-html-plugin": "^0.9.0"
     },
     "scripts": {
+        "test:viewers": "web-test-runner --config scripts/web-test-runner.viewers.config.mjs",
         "test:watch": "web-test-runner --config scripts/web-test-runner.config.mjs --watch",
         "test:coverage": "web-test-runner --config scripts/web-test-runner.config.mjs --coverage",
         "test": "web-test-runner --config scripts/web-test-runner.config.mjs",

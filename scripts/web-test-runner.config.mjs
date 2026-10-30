@@ -1,4 +1,3 @@
-import { fileURLToPath } from "node:url";
 import { defaultReporter, summaryReporter } from "@web/test-runner";
 //import { chromeLauncher } from "@web/test-runner-chrome";
 import { esbuildPlugin } from "@web/dev-server-esbuild";
@@ -6,7 +5,8 @@ import { esbuildPlugin } from "@web/dev-server-esbuild";
 // https://modern-web.dev/docs/test-runner/cli-and-configuration/
 
 export default {
-    files: "test/**/*.test.ts",
+    // test/viewers needs the build's compiler settings: scripts/web-test-runner.viewers.config.mjs
+    files: ["test/**/*.test.ts", "!test/viewers/**"],
     nodeResolve: true,
     debugger: true,
     // browsers: [
@@ -20,11 +20,6 @@ export default {
     plugins: [
         esbuildPlugin({
             ts: true,
-            // The viewers use decorators, which esbuild only compiles when
-            // tsconfig says experimentalDecorators.
-            tsconfig: fileURLToPath(
-                new URL("../tsconfig.test.json", import.meta.url),
-            ),
             loaders: {
                 ".js": "ts",
                 ".glsl": "text",

@@ -30,6 +30,8 @@ jobs:
         run: npm run build
       - name: Unit tests
         run: npm run test
+      - name: Viewer tests
+        run: npm run test:viewers
       - name: Format with prettier (the fix is committed to the branch)
         if: github.event_name == 'push'
         run: |
