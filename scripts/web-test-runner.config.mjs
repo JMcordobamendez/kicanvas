@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { defaultReporter, summaryReporter } from "@web/test-runner";
 //import { chromeLauncher } from "@web/test-runner-chrome";
 import { esbuildPlugin } from "@web/dev-server-esbuild";
@@ -19,6 +20,9 @@ export default {
     plugins: [
         esbuildPlugin({
             ts: true,
+            // The viewers use decorators, which esbuild only compiles with
+            // the experimentalDecorators setting of tsconfig.json.
+            tsconfig: fileURLToPath(new URL("../tsconfig.json", import.meta.url)),
             loaders: {
                 ".js": "ts",
                 ".glsl": "text",
