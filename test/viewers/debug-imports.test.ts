@@ -1,0 +1,70 @@
+suite("debug imports", function () {
+    test("each module", async function () {
+        const bad: string[] = [];
+        try { await import("../../src/base/iterator.ts"); } catch (e) { bad.push("src/base/iterator.ts: " + String(e)); }
+        try { await import("../../src/base/types.ts"); } catch (e) { bad.push("src/base/types.ts: " + String(e)); }
+        try { await import("../../src/base/math/matrix3.ts"); } catch (e) { bad.push("src/base/math/matrix3.ts: " + String(e)); }
+        try { await import("../../src/base/math/vec2.ts"); } catch (e) { bad.push("src/base/math/vec2.ts: " + String(e)); }
+        try { await import("../../src/base/math/angle.ts"); } catch (e) { bad.push("src/base/math/angle.ts: " + String(e)); }
+        try { await import("../../src/base/math/bbox.ts"); } catch (e) { bad.push("src/base/math/bbox.ts: " + String(e)); }
+        try { await import("../../src/base/math/arc.ts"); } catch (e) { bad.push("src/base/math/arc.ts: " + String(e)); }
+        try { await import("../../src/base/math/camera2.ts"); } catch (e) { bad.push("src/base/math/camera2.ts: " + String(e)); }
+        try { await import("../../src/base/math/index.ts"); } catch (e) { bad.push("src/base/math/index.ts: " + String(e)); }
+        try { await import("../../src/base/color.ts"); } catch (e) { bad.push("src/base/color.ts: " + String(e)); }
+        try { await import("../../src/graphics/shapes.ts"); } catch (e) { bad.push("src/graphics/shapes.ts: " + String(e)); }
+        try { await import("../../src/graphics/renderer.ts"); } catch (e) { bad.push("src/graphics/renderer.ts: " + String(e)); }
+        try { await import("../../src/graphics/index.ts"); } catch (e) { bad.push("src/graphics/index.ts: " + String(e)); }
+        try { await import("../../src/graphics/canvas2d.ts"); } catch (e) { bad.push("src/graphics/canvas2d.ts: " + String(e)); }
+        try { await import("../../src/base/log.ts"); } catch (e) { bad.push("src/base/log.ts: " + String(e)); }
+        try { await import("../../src/base/array.ts"); } catch (e) { bad.push("src/base/array.ts: " + String(e)); }
+        try { await import("../../src/kicad/tokenizer.ts"); } catch (e) { bad.push("src/kicad/tokenizer.ts: " + String(e)); }
+        try { await import("../../src/kicad/parser.ts"); } catch (e) { bad.push("src/kicad/parser.ts: " + String(e)); }
+        try { await import("../../src/kicad/common.ts"); } catch (e) { bad.push("src/kicad/common.ts: " + String(e)); }
+        try { await import("../../src/kicad/schematic.ts"); } catch (e) { bad.push("src/kicad/schematic.ts: " + String(e)); }
+        try { await import("../../src/kicad/schematic-nets.ts"); } catch (e) { bad.push("src/kicad/schematic-nets.ts: " + String(e)); }
+        try { await import("../../src/kicad/board.ts"); } catch (e) { bad.push("src/kicad/board.ts: " + String(e)); }
+        try { await import("../../src/kicad/drawing-sheet.ts"); } catch (e) { bad.push("src/kicad/drawing-sheet.ts: " + String(e)); }
+        try { await import("../../src/base/object.ts"); } catch (e) { bad.push("src/base/object.ts: " + String(e)); }
+        try { await import("../../src/kicad/project-settings.ts"); } catch (e) { bad.push("src/kicad/project-settings.ts: " + String(e)); }
+        try { await import("../../src/kicad/index.ts"); } catch (e) { bad.push("src/kicad/index.ts: " + String(e)); }
+        try { await import("../../src/kicad/text/glyph.ts"); } catch (e) { bad.push("src/kicad/text/glyph.ts: " + String(e)); }
+        try { await import("../../src/kicad/text/markup.ts"); } catch (e) { bad.push("src/kicad/text/markup.ts: " + String(e)); }
+        try { await import("../../src/kicad/text/font.ts"); } catch (e) { bad.push("src/kicad/text/font.ts: " + String(e)); }
+        try { await import("../../src/kicad/text/newstroke-glyphs.ts"); } catch (e) { bad.push("src/kicad/text/newstroke-glyphs.ts: " + String(e)); }
+        try { await import("../../src/kicad/text/stroke-font.ts"); } catch (e) { bad.push("src/kicad/text/stroke-font.ts: " + String(e)); }
+        try { await import("../../src/kicad/text/eda-text.ts"); } catch (e) { bad.push("src/kicad/text/eda-text.ts: " + String(e)); }
+        try { await import("../../src/kicad/text/lib-text.ts"); } catch (e) { bad.push("src/kicad/text/lib-text.ts: " + String(e)); }
+        try { await import("../../src/kicad/text/sch-field.ts"); } catch (e) { bad.push("src/kicad/text/sch-field.ts: " + String(e)); }
+        try { await import("../../src/kicad/text/sch-text.ts"); } catch (e) { bad.push("src/kicad/text/sch-text.ts: " + String(e)); }
+        try { await import("../../src/kicad/text/index.ts"); } catch (e) { bad.push("src/kicad/text/index.ts: " + String(e)); }
+        try { await import("../../src/viewers/base/view-layers.ts"); } catch (e) { bad.push("src/viewers/base/view-layers.ts: " + String(e)); }
+        try { await import("../../src/viewers/base/painter.ts"); } catch (e) { bad.push("src/viewers/base/painter.ts: " + String(e)); }
+        try { await import("../../src/viewers/drawing-sheet/painter.ts"); } catch (e) { bad.push("src/viewers/drawing-sheet/painter.ts: " + String(e)); }
+        try { await import("../../src/viewers/base/grid.ts"); } catch (e) { bad.push("src/viewers/base/grid.ts: " + String(e)); }
+        try { await import("../../src/base/async.ts"); } catch (e) { bad.push("src/base/async.ts: " + String(e)); }
+        try { await import("../../src/base/disposable.ts"); } catch (e) { bad.push("src/base/disposable.ts: " + String(e)); }
+        try { await import("../../src/base/events.ts"); } catch (e) { bad.push("src/base/events.ts: " + String(e)); }
+        try { await import("../../src/base/functions.ts"); } catch (e) { bad.push("src/base/functions.ts: " + String(e)); }
+        try { await import("../../src/viewers/base/events.ts"); } catch (e) { bad.push("src/viewers/base/events.ts: " + String(e)); }
+        try { await import("../../src/base/local-storage.ts"); } catch (e) { bad.push("src/base/local-storage.ts: " + String(e)); }
+        try { await import("../../src/kicanvas/themes/witch-hazel.ts"); } catch (e) { bad.push("src/kicanvas/themes/witch-hazel.ts: " + String(e)); }
+        try { await import("../../src/kicanvas/themes/kicad-default.ts"); } catch (e) { bad.push("src/kicanvas/themes/kicad-default.ts: " + String(e)); }
+        try { await import("../../src/kicanvas/themes/index.ts"); } catch (e) { bad.push("src/kicanvas/themes/index.ts: " + String(e)); }
+        try { await import("../../src/kicanvas/preferences.ts"); } catch (e) { bad.push("src/kicanvas/preferences.ts: " + String(e)); }
+        try { await import("../../src/base/dom/pan-and-zoom.ts"); } catch (e) { bad.push("src/base/dom/pan-and-zoom.ts: " + String(e)); }
+        try { await import("../../src/base/dom/size-observer.ts"); } catch (e) { bad.push("src/base/dom/size-observer.ts: " + String(e)); }
+        try { await import("../../src/viewers/base/viewport.ts"); } catch (e) { bad.push("src/viewers/base/viewport.ts: " + String(e)); }
+        try { await import("../../src/viewers/base/viewer.ts"); } catch (e) { bad.push("src/viewers/base/viewer.ts: " + String(e)); }
+        try { await import("../../src/viewers/base/document-viewer.ts"); } catch (e) { bad.push("src/viewers/base/document-viewer.ts: " + String(e)); }
+        try { await import("../../src/viewers/schematic/layers.ts"); } catch (e) { bad.push("src/viewers/schematic/layers.ts: " + String(e)); }
+        try { await import("../../src/viewers/schematic/net-painter.ts"); } catch (e) { bad.push("src/viewers/schematic/net-painter.ts: " + String(e)); }
+        try { await import("../../src/viewers/schematic/painters/base.ts"); } catch (e) { bad.push("src/viewers/schematic/painters/base.ts: " + String(e)); }
+        try { await import("../../src/viewers/schematic/painters/label.ts"); } catch (e) { bad.push("src/viewers/schematic/painters/label.ts: " + String(e)); }
+        try { await import("../../src/viewers/schematic/painters/pin.ts"); } catch (e) { bad.push("src/viewers/schematic/painters/pin.ts: " + String(e)); }
+        try { await import("../../src/graphics/null-renderer.ts"); } catch (e) { bad.push("src/graphics/null-renderer.ts: " + String(e)); }
+        try { await import("../../src/viewers/schematic/painters/symbol.ts"); } catch (e) { bad.push("src/viewers/schematic/painters/symbol.ts: " + String(e)); }
+        try { await import("../../src/viewers/schematic/painter.ts"); } catch (e) { bad.push("src/viewers/schematic/painter.ts: " + String(e)); }
+        try { await import("../../src/viewers/schematic/viewer.ts"); } catch (e) { bad.push("src/viewers/schematic/viewer.ts: " + String(e)); }
+        console.log("BAD MODULES: " + JSON.stringify(bad));
+    });
+});
