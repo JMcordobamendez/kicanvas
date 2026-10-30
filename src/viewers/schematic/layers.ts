@@ -14,6 +14,8 @@ import type { SchematicTheme } from "../../kicad";
 export { ViewLayer };
 
 export enum LayerNames {
+    // The highlighted net, drawn above everything else
+    net_highlight = ":NetHighlight",
     // Bounding boxes for clickable items
     interactive = ":Interactive",
     // DNP and other marks.

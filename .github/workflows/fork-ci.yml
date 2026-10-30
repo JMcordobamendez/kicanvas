@@ -1,0 +1,43 @@
+# Fork only (JMcordobamendez/kicanvas): runs upstream's CI steps on every push
+# to a feature branch and keeps the build as an artifact. Not meant for upstream.
+name: Fork CI
+
+on:
+  push:
+    branches:
+      - "feat/**"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "npm"
+          cache-dependency-path: "package-lock.json"
+      - run: npm ci
+      - name: Lint (eslint)
+        run: npm run lint:eslint
+      - name: Lint (types)
+        run: npm run lint:types
+      - name: Lint (prettier)
+        run: npm run lint:prettier
+      - name: Build
+        run: npm run build
+      - name: Unit tests
+        run: npm run test
+      - name: Checksum
+        run: |
+          sha256sum build/kicanvas.js | tee build/kicanvas.js.sha256
+          echo "commit: $GITHUB_SHA" > build/BUILD_INFO.txt
+          date -u +"built: %Y-%m-%dT%H:%M:%SZ" >> build/BUILD_INFO.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kicanvas-build
+          path: |
+            build/kicanvas.js
+            build/kicanvas.js.sha256
+            build/BUILD_INFO.txt

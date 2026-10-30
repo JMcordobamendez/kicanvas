@@ -31,6 +31,19 @@ export class KiCanvasSelectEvent extends KiCanvasEvent<SelectDetails> {
     }
 }
 
+interface NetHighlightDetails {
+    /** The net highlighted, or null when the highlight was cleared. */
+    net: unknown;
+}
+
+export class KiCanvasNetHighlightEvent extends KiCanvasEvent<NetHighlightDetails> {
+    static readonly type = "kicanvas:nethighlight";
+
+    constructor(detail: NetHighlightDetails) {
+        super(KiCanvasNetHighlightEvent.type, detail, true);
+    }
+}
+
 interface MouseMoveDetails {
     x: number;
     y: number;
@@ -50,6 +63,7 @@ export interface KiCanvasEventMap {
     [KiCanvasLoadEvent.type]: KiCanvasLoadEvent;
     [KiCanvasSelectEvent.type]: KiCanvasSelectEvent;
     [KiCanvasMouseMoveEvent.type]: KiCanvasMouseMoveEvent;
+    [KiCanvasNetHighlightEvent.type]: KiCanvasNetHighlightEvent;
 }
 
 declare global {
