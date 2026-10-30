@@ -144,4 +144,3 @@ export function single(...items: string[]) {
     const doc = schematic(ROOT, ...items);
     return { doc, netlist: new SchematicNetlist([{ path: `/${ROOT}`, doc }]) };
 }
-
