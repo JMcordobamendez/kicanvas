@@ -23,12 +23,12 @@ jobs:
         run: npm run lint:eslint
       - name: Lint (types)
         run: npm run lint:types
-      - name: Lint (prettier)
-        run: npm run lint:prettier
       - name: Build
         run: npm run build
       - name: Unit tests
         run: npm run test
+      - name: Lint (prettier)
+        run: npm run lint:prettier
       - name: Checksum
         run: |
           sha256sum build/kicanvas.js | tee build/kicanvas.js.sha256
