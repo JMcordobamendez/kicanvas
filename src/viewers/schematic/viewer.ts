@@ -25,6 +25,7 @@ import {
 } from "../../kicad/schematic";
 import {
     netlist_for,
+    parse_netlist,
     type SchematicNet,
     type SchematicNetlist,
 } from "../../kicad/schematic-nets";
@@ -82,6 +83,18 @@ export class SchematicViewer extends DocumentViewer<
             return this.sheet_path;
         }
         return netlist.paths_of(this.document)[0] ?? "";
+    }
+
+    /**
+     * Names the nets as a netlist exported by KiCad does, for the nets that
+     * have pins (see the notes in kicad/schematic-nets.ts about how nets are
+     * named without it).
+     *
+     * @param netlist - the text of `kicad-cli sch export netlist`
+     * @returns how many nets changed their name
+     */
+    public apply_netlist(netlist: string): number {
+        return this.netlist.apply_names(parse_netlist(netlist));
     }
 
     /** The net a wire, label, pin, junction or power symbol is part of. */
