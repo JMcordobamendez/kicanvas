@@ -1,9 +1,10 @@
 {
-    // Used by the test runner (scripts/web-test-runner.config.mjs): the same
-    // settings as the build, except that class fields are defined with
-    // [[Define]] semantics, which is what the tests were written against.
-    "extends": "./tsconfig.json",
+    // Used by the test runner (scripts/web-test-runner.config.mjs), which does
+    // not follow "extends": the settings esbuild needs to compile the code
+    // as the tests were written, with class fields defined ([[Define]]) and
+    // the decorators the viewers use.
     "compilerOptions": {
+        "experimentalDecorators": true,
         "useDefineForClassFields": true,
     },
 }
