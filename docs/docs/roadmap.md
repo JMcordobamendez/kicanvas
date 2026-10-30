@@ -33,6 +33,7 @@ Here's a non-exhaustive roadmap:
     - [x] Board layer selection and visibility
     - [x] Board net selection
     - [x] Board net filtering
+    - [x] Schematic net selection and highlighting (click a wire, label, pin or power symbol)
     - [x] Board object visibility controls
     - [ ] Board trace selection
     - [ ] Board zone selection
