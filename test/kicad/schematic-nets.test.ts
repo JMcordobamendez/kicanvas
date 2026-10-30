@@ -6,6 +6,8 @@
 
 import { assert } from "chai";
 import { Vec2 } from "../../src/base/math";
+import { Project } from "../../src/kicanvas/project";
+import type { IFileSystem } from "../../src/kicanvas/services/vfs";
 import {
     SchematicNetlist,
     distance_to_segment,
@@ -24,6 +26,7 @@ import {
     label,
     resistor,
     schematic,
+    schematic_source,
     sheet_block,
     single,
     symbol,
@@ -333,6 +336,60 @@ suite("kicad.schematic-nets: schematic connectivity", function () {
             netlist.net_for_pin("R2", "1"),
         );
         assert.equal(netlist.net_for_pin("R1", "2")!.name_source, "netlist");
+    });
+});
+
+class MemoryFileSystem implements IFileSystem {
+    constructor(private files: Record<string, string>) {}
+
+    *list() {
+        yield* Object.keys(this.files);
+    }
+
+    async setup() {}
+
+    async get(path: string) {
+        return new File([this.files[path] ?? ""], path);
+    }
+
+    async has(path: string) {
+        return path in this.files;
+    }
+
+    async download() {}
+}
+
+suite("kicad.schematic-nets: projects", function () {
+    test("the hierarchy is found even when the files are named differently from the sheets", async function () {
+        // loaded one by one, as the embed does: "sub.kicad_sch", not "sch/sub.kicad_sch"
+        const root = schematic_source(
+            ROOT,
+            resistor("R1", 100, 100),
+            wire(100, 103.81, 100, 110),
+            wire(100, 110, 150, 110),
+            sheet_block("Sub", "sch/sub.kicad_sch", SUB, 150, 100, [
+                ["IN", 150, 110],
+            ]),
+        );
+        const sub = schematic_source(
+            "33333333-3333-4333-8333-333333333333",
+            hier_label("IN", 20, 20),
+            wire(20, 20, 30, 20),
+            resistor("R2", 30, 23.81),
+        );
+        const project = new Project();
+        await project.load(
+            new MemoryFileSystem({
+                "root.kicad_sch": root,
+                "sub.kicad_sch": sub,
+            }),
+        );
+
+        const netlist = SchematicNetlist.from_project(project);
+        assert.deepEqual(netlist.sheet_paths, [`/${ROOT}`, `/${ROOT}/${SUB}`]);
+        const net = netlist.net_for_pin("R1", "2")!;
+        assert.strictEqual(net, netlist.net_for_pin("R2", "1"));
+        assert.equal(net.name, "/Sub/IN");
     });
 });
 

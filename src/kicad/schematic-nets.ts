@@ -5,6 +5,7 @@
 */
 
 import { Vec2 } from "../base/math";
+import { basename, dirname, normalize_join } from "../base/paths";
 import type { Project } from "../kicanvas/project";
 import type {
     Bus,
@@ -230,6 +231,9 @@ class UnionFind {
 
 const EPSILON = 0.005;
 
+/** KiCad writes a "/" in a net name as "{slash}", it is the sheet separator. */
+const net_text = (text: string) => text.replaceAll("/", "{slash}");
+
 function point_key(p: Vec2) {
     return `${Math.round(p.x * 1e4)},${Math.round(p.y * 1e4)}`;
 }
@@ -387,22 +391,66 @@ export class SchematicNetlist {
         this.#build(sheets);
     }
 
-    /** The connectivity of every schematic page of a project. */
+    /**
+     * The connectivity of every schematic of a project.
+     *
+     * The hierarchy is worked out here, from the sheets that name a file,
+     * instead of taken from the project's pages: a project made of files
+     * loaded one by one (as the embed does) names them differently from the
+     * sheets that use them, and then has no hierarchy.
+     */
     static from_project(project: Project): SchematicNetlist {
-        const sheets = new Map<string, NetlistSheet>();
-        for (const page of project.pages()) {
-            if (page.type != "schematic" || sheets.has(page.sheet_path)) {
-                continue;
+        const docs = [...project.schematics()];
+        const find = (parent: KicadSch, file: string) => {
+            const wanted = normalize_join(dirname(parent.filename), file);
+            return (
+                docs.find((d) => d.filename == wanted) ??
+                docs.find((d) => d.filename == file) ??
+                docs.find(
+                    (d) =>
+                        wanted.endsWith(`/${d.filename}`) ||
+                        d.filename.endsWith(`/${file}`),
+                ) ??
+                docs.find((d) => basename(d.filename) == basename(file))
+            );
+        };
+
+        // for each document, the document of each of its sheets
+        const children = new Map<KicadSch, [string, KicadSch][]>();
+        const used = new Set<KicadSch>();
+        for (const doc of docs) {
+            const list: [string, KicadSch][] = [];
+            for (const sheet of doc.sheets) {
+                const child = sheet.sheetfile
+                    ? find(doc, sheet.sheetfile)
+                    : undefined;
+                if (child && child !== doc) {
+                    list.push([sheet.uuid, child]);
+                    used.add(child);
+                }
             }
-            const doc = page.document as KicadSch | undefined;
-            if (doc) {
-                sheets.set(page.sheet_path, {
-                    path: page.sheet_path,
-                    doc: doc,
-                });
+            children.set(doc, list);
+        }
+
+        const sheets: NetlistSheet[] = [];
+        const walk = (doc: KicadSch, path: string, depth: number) => {
+            sheets.push({ path, doc });
+            if (depth < 16) {
+                for (const [uuid, child] of children.get(doc) ?? []) {
+                    walk(child, `${path}/${uuid}`, depth + 1);
+                }
+            }
+        };
+        // roots are the documents no sheet uses; whatever is left is a cycle
+        for (const doc of docs.filter((d) => !used.has(d))) {
+            walk(doc, `/${doc.uuid}`, 0);
+        }
+        for (const doc of docs) {
+            if (!sheets.some((s) => s.doc === doc)) {
+                walk(doc, `/${doc.uuid}`, 0);
             }
         }
-        return new SchematicNetlist([...sheets.values()]);
+        return new SchematicNetlist(sheets);
     }
 
     /** Paths of every sheet instance. */
@@ -682,10 +730,11 @@ export class SchematicNetlist {
             for (const [list, priority] of labels) {
                 for (const item of list) {
                     const at = item.at.position;
+                    const text = net_text(item.shown_text);
                     const name =
                         priority == Priority.global_label
-                            ? item.shown_text
-                            : sheet.name_path + item.shown_text;
+                            ? text
+                            : sheet.name_path + text;
                     const node = new_node(sheet, "label", item, {
                         priority,
                         name,
@@ -708,7 +757,7 @@ export class SchematicNetlist {
                     const at = pin.at.position;
                     const node = new_node(sheet, "sheet_pin", pin, {
                         priority: Priority.sheet_pin,
-                        name: sheet.name_path + pin.name,
+                        name: sheet.name_path + net_text(pin.name),
                     });
                     sheet.sheet_pins.push({ node, item: pin, at });
                     entry(sheet, at).others.push({ node, kind: "sheet_pin" });
@@ -720,7 +769,7 @@ export class SchematicNetlist {
                 if (power) {
                     power_node = new_node(sheet, "power", symbol, {
                         priority: Priority.power,
-                        name: symbol.value,
+                        name: net_text(symbol.value),
                     });
                     sheet.symbols.push({ node: power_node, item: symbol });
                     join(global_names, symbol.value, power_node);
@@ -772,7 +821,7 @@ export class SchematicNetlist {
                         // invisible power inputs join the net of their name
                         infos[model.node]!.driver = {
                             priority: Priority.power,
-                            name: def.name.text,
+                            name: net_text(def.name.text),
                         };
                         join(global_names, def.name.text, model.node);
                     }
@@ -900,7 +949,7 @@ export class SchematicNetlist {
                 if (!is_power_symbol(m.symbol)) {
                     const name = m.name == "~" ? "" : m.name;
                     pins.push({
-                        text: `${m.reference}-${name || `Pad${m.number}`}`,
+                        text: `${m.reference}-${net_text(name) || `Pad${m.number}`}`,
                         pin: {
                             sheet_path: path,
                             symbol: m.symbol,
