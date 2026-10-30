@@ -293,6 +293,54 @@ suite("kicad.schematic-nets: schematic connectivity", function () {
         assert.isNull(netlist.pick("/nowhere", new Vec2(100, 110), 0.5));
     });
 
+    test("a bus carries the same nets through every sheet it reaches", function () {
+        const B = "44444444-4444-4444-8444-444444444444";
+        const root = schematic(
+            ROOT,
+            bus(150, 110, 250, 110),
+            sheet_block("A", "a.kicad_sch", SUB, 150, 100, [
+                ["D[0..1]", 150, 110],
+            ]),
+            sheet_block("B", "b.kicad_sch", B, 250, 100, [
+                ["D[0..1]", 250, 110],
+            ]),
+        );
+        // each sheet takes D0 off the bus with a label on a wire
+        const child = (reference: string) =>
+            schematic(
+                "33333333-3333-4333-8333-333333333333",
+                hier_label("D[0..1]", 20, 20),
+                bus(20, 20, 40, 20),
+                wire(40, 30, 50, 30),
+                label("D0", 45, 30),
+                resistor(reference, 50, 33.81),
+            );
+        const netlist = new SchematicNetlist([
+            { path: `/${ROOT}`, doc: root },
+            { path: `/${ROOT}/${SUB}`, doc: child("R1") },
+            { path: `/${ROOT}/${B}`, doc: child("R2") },
+        ]);
+        const a = netlist.net_for_pin("R1", "1")!;
+        assert.isDefined(a);
+        assert.strictEqual(a, netlist.net_for_pin("R2", "1"));
+        // same priority in both sheets: the first by name
+        assert.equal(a.name, "/A/D0");
+        assert.equal(a.sheet_paths.length, 2);
+    });
+
+    test("a pin with a name drives the net before one known by its number", function () {
+        const { netlist } = single(
+            symbol("Test:IC", "U1", "IC", 100, 100, 0, "", ["1", "2"]),
+            resistor("R1", 85, 100, 90),
+            // IN of U1 is at (92.38, 100): pin 2 of R1 (rotated) is at (88.81, 100)
+            wire(88.81, 100, 92.38, 100),
+        );
+        const net = netlist.net_for_pin("U1", "2")!;
+        assert.strictEqual(net, netlist.net_for_pin("R1", "2"));
+        // "R1-Pad2" sorts first, but U1's pin is called IN
+        assert.equal(net.name, "Net-(U1-IN)");
+    });
+
     test("buses are grouped apart from wires and named after their label", function () {
         const { doc, netlist } = single(
             bus(10, 10, 40, 10),

@@ -231,6 +231,9 @@ class UnionFind {
 
 const EPSILON = 0.005;
 
+/** True for the name of a bus: "D[0..7]", "USB{DP DM}". */
+const is_bus_name = (text: string) => /[{}]|\[\d+\.\.\d+\]/.test(text);
+
 /** KiCad writes a "/" in a net name as "{slash}", it is the sheet separator. */
 const net_text = (text: string) => text.replaceAll("/", "{slash}");
 
@@ -322,7 +325,7 @@ export function expand_bus_name(name: string): string[] {
     if (group) {
         const prefix = group[1]!;
         const out: string[] = [];
-        for (const member of group[2]!.split(/\s+/).filter(Boolean)) {
+        for (const member of group[2]!.split(/[\s,]+/).filter(Boolean)) {
             for (const n of vector(member) ?? [member]) {
                 out.push(prefix ? `${prefix}.${n}` : n);
             }
@@ -681,6 +684,8 @@ export class SchematicNetlist {
             return e;
         };
         // Names that join nodes: per sheet instance (local) and everywhere.
+        // every label, by text, to find the nets a bus carries
+        const label_texts = new Map<string, { node: number; path: string }[]>();
         const local_names = new Map<string, number[]>();
         const hier_names = new Map<string, number[]>();
         const global_names = new Map<string, number[]>();
@@ -740,6 +745,14 @@ export class SchematicNetlist {
                         name,
                     });
                     sheet.labels.push({ node, item, at });
+                    const same_text = label_texts.get(item.shown_text);
+                    if (same_text) {
+                        same_text.push({ node, path: sheet.path });
+                    } else {
+                        label_texts.set(item.shown_text, [
+                            { node, path: sheet.path },
+                        ]);
+                    }
                     entry(sheet, at).others.push({ node, kind: "label" });
                     if (priority == Priority.global_label) {
                         join(global_names, item.shown_text, node);
@@ -856,9 +869,17 @@ export class SchematicNetlist {
                 } else if (wires.length) {
                     uf.union_all([...nodes, ...wires]);
                 } else if (buses.length) {
-                    // labels sit on buses, pins never do
+                    // labels and the sheet pins of buses sit on buses, pins never do
                     const labels = e.others
-                        .filter((o) => o.kind == "label")
+                        .filter(
+                            (o) =>
+                                o.kind == "label" ||
+                                (o.kind == "sheet_pin" &&
+                                    is_bus_name(
+                                        (infos[o.node]!.item as SchematicSheetPin)
+                                            .name,
+                                    )),
+                        )
                         .map((o) => o.node);
                     uf.union_all([...labels, ...buses]);
                     uf.union_all(nodes.filter((n) => !labels.includes(n)));
@@ -897,6 +918,47 @@ export class SchematicNetlist {
             }
         }
 
+        // A bus carries nets named after its members ("D0", "USB.DP"): in every
+        // sheet the bus reaches, the labels of a member are the same net.
+        const bus_sheets = new Map<number, Set<string>>();
+        const bus_members = new Map<number, Set<string>>();
+        for (let i = 0; i < infos.length; i++) {
+            if (infos[i]!.kind == "bus") {
+                const root = uf.find(i);
+                if (!bus_sheets.has(root)) {
+                    bus_sheets.set(root, new Set());
+                    bus_members.set(root, new Set());
+                }
+            }
+        }
+        for (let i = 0; i < infos.length; i++) {
+            const info = infos[i]!;
+            const root = uf.find(i);
+            const sheets_of = bus_sheets.get(root);
+            if (!sheets_of) {
+                continue;
+            }
+            sheets_of.add(info.sheet.path);
+            const item = info.item;
+            const text =
+                info.kind == "label"
+                    ? (item as NetLabelItem).shown_text
+                    : info.kind == "sheet_pin"
+                      ? (item as SchematicSheetPin).name
+                      : "";
+            for (const member of expand_bus_name(text)) {
+                bus_members.get(root)!.add(member);
+            }
+        }
+        for (const [root, members] of bus_members) {
+            for (const member of members) {
+                const nodes = (label_texts.get(member) ?? [])
+                    .filter((l) => bus_sheets.get(root)!.has(l.path))
+                    .map((l) => l.node);
+                uf.union_all(nodes);
+            }
+        }
+
         // 4. Gather the nets and name them.
         const roots = new Map<number, number[]>();
         for (let i = 0; i < infos.length; i++) {
@@ -918,7 +980,7 @@ export class SchematicNetlist {
         const is_bus = nodes.some((n) => infos[n]!.kind == "bus");
         const net = new SchematicNet(this.nets.length, "", is_bus);
         let best: Driver | null = null;
-        const pins: { text: string; pin: NetPin }[] = [];
+        const pins: { text: string; pin: NetPin; named: boolean }[] = [];
         for (const n of nodes) {
             const info = infos[n]!;
             const path = info.sheet.path;
@@ -949,6 +1011,7 @@ export class SchematicNetlist {
                 if (!is_power_symbol(m.symbol)) {
                     const name = m.name == "~" ? "" : m.name;
                     pins.push({
+                        named: name != "",
                         text: `${m.reference}-${net_text(name) || `Pad${m.number}`}`,
                         pin: {
                             sheet_path: path,
@@ -968,7 +1031,11 @@ export class SchematicNetlist {
             net.named = true;
             net.name_source = "label";
         } else if (pins.length) {
-            const first = pins.map((p) => p.text).sort()[0]!;
+            // KiCad drives with a pin that has a name before one that has not
+            const named = pins.filter((p) => p.named);
+            const first = (named.length ? named : pins)
+                .map((p) => p.text)
+                .sort()[0]!;
             net.name =
                 pins.length == 1 ? `unconnected-(${first})` : `Net-(${first})`;
         } else {
